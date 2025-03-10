@@ -19,29 +19,29 @@ class DoctorListScreen extends StatelessWidget {
     // Sample data - in a real app, this would come from an API and be filtered by service
     final doctors = [
       Doctor(
-        name: 'Dr. Emily Carter',
+        name: 'Dr. Haz',
         specialty: 'Cardiologie',
         availability: 'Disponible: Lun, Mer, Ven',
         imageUrl: 'assets/images/doctor1.jpg',
         location: ConsultationLocation(
-          name: 'Hôpital Saint-Louis',
-          address: '1 Avenue Claude Vellefaux, 75010 Paris',
+          name: 'Hôpital Tamba',
+          address: 'Tambacounda',
           type: ConsultationType.hospital,
         ),
       ),
       Doctor(
-        name: 'Dr. James Holloway',
+        name: 'Dr. Khadij',
         specialty: 'Neurologie',
         availability: 'Disponible: Mar, Jeu',
         imageUrl: 'assets/images/doctor2.jpg',
         location: ConsultationLocation(
-          name: 'Clinique du Parc',
-          address: '155 Ter Boulevard Victor Hugo, 92110 Clichy',
+          name: 'Hopital Fann',
+          address: 'Dakar',
           type: ConsultationType.clinic,
         ),
       ),
       Doctor(
-        name: 'Dr. Lisa Kim',
+        name: 'Dr. Issa',
         specialty: 'Pédiatrie',
         availability: 'Disponible: Lun, Jeu, Sam',
         imageUrl: 'assets/images/doctor3.jpg',
@@ -63,7 +63,7 @@ class DoctorListScreen extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              'HealthSchedule',
+              'BidewTech',
               style: TextStyle(
                 color: Theme.of(context).primaryColor,
                 fontWeight: FontWeight.bold,
