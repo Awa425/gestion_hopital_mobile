@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../screens/appointment_reason_screen.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,6 +14,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isLogin = true;
+  bool __isLoading = false;
   
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -24,16 +28,80 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      // For demo purposes, we'll just navigate to the appointment reason screen
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => const AppointmentReasonScreen(),
+Future<void> _submitForm() async {
+  if (_formKey.currentState!.validate()) {
+    // Afficher un indicateur de chargement
+    setState(() {
+      __isLoading = true;
+    });
+    
+    try {
+      // Préparer les données pour l'API
+      final Map<String, dynamic> authData = {
+        'email': _emailController.text,
+        'password': _passwordController.text,
+      };
+      
+      // Ajouter le nom complet si en mode inscription
+      if (!_isLogin) {
+        authData['fullName'] = _fullNameController.text;
+      }
+      
+      // URL de l'API 
+      final url = _isLogin 
+          ? 'http://127.0.0.1:8000/api/login' 
+          : 'http://127.0.0.1:8000/api/patients';
+      
+      // Effectuer la requête HTTP
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(authData),
+      );
+      
+      // Analyser la réponse
+      final responseData = json.decode(response.body);
+      
+      // Vérifier le code de statut
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Stocker le token d'authentification
+        final token = responseData['token'];
+        
+        // Vous pouvez utiliser shared_preferences pour stocker le token
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_token', token);
+        
+        // Naviguer vers l'écran suivant
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const AppointmentReasonScreen(),
+          ),
+        );
+      } else {
+        // Gérer les erreurs d'authentification
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(responseData['message'] ?? 'Authentication failed'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (error) {
+      // Gérer les erreurs de connexion
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to connect to the server. Please try again later.'),
+          backgroundColor: Colors.red,
         ),
       );
+    } finally {
+      // Cacher l'indicateur de chargement
+      setState(() {
+        __isLoading = false;
+      });
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'HealthSchedule',
+                    'BidewTech',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           color: Theme.of(context).primaryColor,
                           fontWeight: FontWeight.bold,
@@ -116,8 +184,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your password';
                         }
-                        if (value.length < 6) {
-                          return 'Password must be at least 6 characters';
+                        if (value.length < 2) {
+                          return 'Password must be at least 3 characters';
                         }
                         return null;
                       },

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/medical_service.dart';
 import 'doctor_list_screen.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class AppointmentReasonScreen extends StatefulWidget {
   const AppointmentReasonScreen({super.key});
@@ -13,46 +15,69 @@ class _AppointmentReasonScreenState extends State<AppointmentReasonScreen> {
   final _formKey = GlobalKey<FormState>();
   final _reasonController = TextEditingController();
   MedicalService? _selectedService;
+    List<MedicalService> _services = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+    @override
+  void initState() {
+    super.initState();
+    _fetchServices();
+  }
 
-  // Sample medical services - in a real app, this would come from an API
-  final List<MedicalService> _services = [
-    MedicalService(
-      id: '1',
-      name: 'Cardiologie',
-      description: 'Traitement des maladies du cœur et des vaisseaux sanguins',
-      icon: 'favorite',
-    ),
-    MedicalService(
-      id: '2',
-      name: 'Neurologie',
-      description: 'Traitement des maladies du système nerveux',
-      icon: 'psychology',
-    ),
-    MedicalService(
-      id: '3',
-      name: 'Pédiatrie',
-      description: 'Soins médicaux pour les enfants',
-      icon: 'child_care',
-    ),
-    MedicalService(
-      id: '4',
-      name: 'Dermatologie',
-      description: 'Traitement des maladies de la peau',
-      icon: 'healing',
-    ),
-    MedicalService(
-      id: '5',
-      name: 'Ophtalmologie',
-      description: 'Traitement des maladies des yeux',
-      icon: 'visibility',
-    ),
-    MedicalService(
-      id: '6',
-      name: 'Dentisterie',
-      description: 'Soins dentaires et buccaux',
-      icon: 'cleaning_services',
-    ),
-  ];
+    // Récupération des services médicaux depuis l'API
+  Future<void> _fetchServices() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+try {
+    // Remplacez par l'URL de votre API
+    final response = await http.get(
+      Uri.parse('http://127.0.0.1:8000/api/services'),
+      headers: {
+        // 'Authorization': 'Bearer $token', // Si vous avez un token d'authentification
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> responseData = json.decode(response.body);
+      
+      // Vérifier si la requête a réussi selon votre structure de réponse
+      if (responseData['success'] == true && responseData['data'] != null) {
+        final List<dynamic> servicesData = responseData['data'];
+        
+        setState(() {
+          _services = servicesData.map((serviceData) => MedicalService(
+            id: serviceData['id'].toString(), // Conversion en String si nécessaire
+            name: serviceData['libelle'] ?? 'Service sans nom',
+            description: serviceData['description'] ?? 'Aucune description disponible',
+            icon: 'healing', // Utiliser une icône par défaut puisque l'API n'en fournit pas
+          )).toList();
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = 'Erreur dans la structure des données: ${responseData['message'] ?? 'Erreur inconnue'}';
+          _isLoading = false;
+        });
+      }
+    } else {
+      setState(() {
+        _errorMessage = 'Erreur lors de la récupération des services: ${response.statusCode}';
+        _isLoading = false;
+      });
+    }
+  } catch (e) {
+    setState(() {
+      _errorMessage = 'Impossible de se connecter au serveur: $e';
+      _isLoading = false;
+    });
+  }
+}
+
+
 
   @override
   void dispose() {
@@ -85,7 +110,7 @@ class _AppointmentReasonScreenState extends State<AppointmentReasonScreen> {
             ),
             const SizedBox(width: 8),
             Text(
-              'HealthSchedule',
+              'BidewTech',
               style: TextStyle(
                 color: Theme.of(context).primaryColor,
                 fontWeight: FontWeight.bold,
